@@ -8,6 +8,7 @@ public class AffinityService(ILogger<AffinityService> logger, IOptions<AffinityC
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        logger.LogInformation($"{nameof(AffinityService)} is Start");
         var serviceProcess = Process.GetCurrentProcess();
         serviceProcess.ProcessorAffinity = (IntPtr)config.Value.ServiceAffinityMask;
         try

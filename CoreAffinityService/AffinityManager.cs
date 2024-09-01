@@ -15,7 +15,7 @@ public class AffinityManager(
 
     public void StartWatching(CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Load configuration {options.Value}");
+        logger.LogDebug($"Load configuration {options.Value}");
 
         var cimResults = cimSession.SubscribeAsync(@"root\cimv2", "WQL", "SELECT * FROM Win32_ProcessStartTrace");
         cimResults.ToObservable().SubscribeAwait(async (result, token) =>
@@ -32,7 +32,7 @@ public class AffinityManager(
             {
                 var process = Process.GetProcessById(processId);
                 var processName = (string)processNameProperty.Value;
-                logger.LogInformation($"Detect process start up '{processId}' ProcessName '{processName}'.");
+                logger.LogDebug($"Detect process start up '{processId}' ProcessName '{processName}'.");
                 if (affinityModel.TryGetAffinityMask(process, out var delay, out var affinityMask))
                 {
                     await Task.Delay(delay, token);
@@ -42,7 +42,7 @@ public class AffinityManager(
                 }
                 else
                 {
-                    logger.LogInformation($"Affinity for the '{processName}' is not defined.");
+                    logger.LogDebug($"Affinity for the '{processName}' is not defined.");
                 }
             }
             catch (ArgumentException)

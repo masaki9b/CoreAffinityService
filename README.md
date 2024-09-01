@@ -1,6 +1,6 @@
 ﻿# Core Affinity Service
 
-Core Affinity Service is autoconfiguration software for X3D processors in 2CCD configuration
+Core Affinity Service is auto process affinity configuration software for X3D processors in 2CCD configuration
 
 ## Affinity Configuration
 

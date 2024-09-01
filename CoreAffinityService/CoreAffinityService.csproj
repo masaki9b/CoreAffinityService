@@ -8,6 +8,8 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <ApplicationIcon>appicon.ico</ApplicationIcon>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
     </PropertyGroup>
     <Choose>
         <When Condition="'$(Configuration)' == 'Release'">

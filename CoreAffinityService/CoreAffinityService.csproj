@@ -7,6 +7,7 @@
         <UserSecretsId>dotnet-CoreAffinityService-29798494-d078-4212-b95f-0427e02ec779</UserSecretsId>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <ApplicationIcon>appicon.ico</ApplicationIcon>
     </PropertyGroup>
     <Choose>
         <When Condition="'$(Configuration)' == 'Release'">

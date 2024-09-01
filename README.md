@@ -6,7 +6,11 @@ Core Affinity Service is auto process affinity configuration software for X3D pr
 
 1. Download from Releases.
 1. Run cmd.exe as admin.
-1. ```sc create "Core Affinity Service" start=auto binPath="C:\Path\To\CoreAffinityService.exe"```
+1. Create service by sc command.
+```
+sc create "Core Affinity Service" start=auto binPath="C:\Path\To\CoreAffinityService.exe"
+```
+
 
 ## Affinity Configuration
 

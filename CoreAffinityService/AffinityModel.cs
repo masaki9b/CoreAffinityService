@@ -7,89 +7,76 @@ namespace CoreAffinityService;
 
 public class AffinityModel
 {
-    private readonly ILogger<AffinityModel> logger;
-    private readonly FrozenDictionary<string, ProcessNameAffinityRule> processAffinities;
-    private readonly ImmutableArray<FolderPathAffinityRule> folderAffinities;
+    private readonly FrozenDictionary<string, ProcessNameRule> targetProcessRules;
+    private readonly ImmutableArray<FolderPathRule> targetFolderRules;
 
-    public AffinityModel(ILogger<AffinityModel> logger, IOptions<AffinityConfiguration> options)
+    public AffinityModel(IOptions<AffinityConfiguration> options)
     {
-        this.logger = logger;
-        
-         var profileDictionary = options.Value.AffinityProfiles.ToFrozenDictionary(
-             profile => profile.Name, profile=> Convert.ToUInt64(profile.AffinityMask, 16));
-         
-        processAffinities = options.Value.ProcessAffinities
-            .Where( affinity => profileDictionary.ContainsKey(affinity.Profile) )
-            .ToFrozenDictionary( affinity => affinity.ProcessName,
-            affinity =>
-            {
-                var affinityMask = profileDictionary[affinity.Profile];
-                return new ProcessNameAffinityRule(affinity, affinityMask);
-            });
+        var profileDictionary = options.Value.AffinityProfiles.ToFrozenDictionary(
+            profile => profile.Name, profile => Convert.ToUInt64(profile.AffinityMask, 16));
 
-        folderAffinities = [
-            ..options.Value.FolderAffinities
+        targetProcessRules = options.Value.TargetProcessRules
+            .Where(rule => profileDictionary.ContainsKey(rule.Profile))
+            .ToFrozenDictionary(rule => rule.ProcessName,
+                affinity =>
+                {
+                    var affinityMask = profileDictionary[affinity.Profile];
+                    return new ProcessNameRule(affinity, affinityMask);
+                });
+
+        targetFolderRules =
+        [
+            ..options.Value.TargetFolderRules
                 .Where(affinity => profileDictionary.ContainsKey(affinity.Profile))
                 .Select(affinity =>
                 {
                     var affinityMask = profileDictionary[affinity.Profile];
-                    return new FolderPathAffinityRule(affinity.FolderPath, affinityMask, affinity.DelayDuration);
+                    return new FolderPathRule(affinity.FolderPath, affinityMask, affinity.DelayDuration);
                 })
         ];
     }
 
-    public async ValueTask ApplyAffinityAsync(int processId, string processName, CancellationToken cancellationToken)
+    public bool TryGetAffinityMask(Process process, out TimeSpan delay, out ulong affinityMask)
     {
-        try
+        if (targetProcessRules.TryGetValue(process.ProcessName, out var rule))
         {
-            logger.LogInformation($"Find ProcessId '{processId}' ProcessName '{processName}'.");
-            var process = Process.GetProcessById(processId);
+            delay = rule.DelayDuration;
+            affinityMask = rule.AffinityMask;
+            return true;
+        }
 
-            if (processAffinities.TryGetValue(process.ProcessName, out var processRule))
+        foreach (var folderPathRule in targetFolderRules)
+        {
+            if (process.MainModule == null)
             {
-                await Task.Delay(processRule.DelayDuration, cancellationToken);
-                process.ProcessorAffinity = (IntPtr)processRule.AffinityMask;
-                logger.LogInformation($"Affinity applied to process '{process.ProcessName}'.");
-                return;
+                continue;
             }
 
-            foreach (var folderAffinity in folderAffinities)
+            if (!process.MainModule.FileName.Contains(folderPathRule.FolderPath,
+                    StringComparison.OrdinalIgnoreCase))
             {
-                if (process.MainModule == null)
-                {
-                    continue;
-                }
-
-                if (!process.MainModule.ModuleName.Contains(folderAffinity.FolderPath,
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                await Task.Delay(folderAffinity.DelayDuration, cancellationToken);
-                process.ProcessorAffinity = (IntPtr)folderAffinity.AffinityMask;
-                logger.LogInformation($"Affinity applied to process '{process.ProcessName}'.");
-                return;
+                continue;
             }
+
+            delay = folderPathRule.DelayDuration;
+            affinityMask = folderPathRule.AffinityMask;
+            process.ProcessorAffinity = (IntPtr)folderPathRule.AffinityMask;
+            return true;
         }
-        catch (ArgumentException)
-        {
-            // ignore
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to apply affinity.");
-        }
+
+        delay = default;
+        affinityMask = default;
+        return false;
     }
 
-    private readonly struct ProcessNameAffinityRule(ProcessAffinityConfig config, ulong affinityMask)
+    private readonly struct ProcessNameRule(TargetProcessRuleConfig config, ulong affinityMask)
     {
         public readonly ulong AffinityMask = affinityMask;
 
         public readonly TimeSpan DelayDuration = TimeSpan.FromSeconds(config.DelayDuration);
     }
 
-    private readonly struct FolderPathAffinityRule(string folderPath, ulong affinityMask, int delayDuration)
+    private readonly struct FolderPathRule(string folderPath, ulong affinityMask, int delayDuration)
     {
         public readonly string FolderPath = folderPath;
 

@@ -6,7 +6,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-CoreAffinityService-29798494-d078-4212-b95f-0427e02ec779</UserSecretsId>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
     </PropertyGroup>
+    <Choose>
+        <When Condition="'$(Configuration)' == 'Release'">
+            <ItemGroup>
+                <Content Remove="appsettings.Development.json" />
+            </ItemGroup>
+        </When>
+    </Choose>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
@@ -15,6 +23,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="a.etl" />
+      <None Include="..\LICENSE">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
     </ItemGroup>
 </Project>

@@ -8,9 +8,10 @@ namespace CoreAffinityService;
 
 public class AffinityConfiguration
 {
-    public AffinityProfileConfig[] AffinityProfiles { get; set; } = Array.Empty<AffinityProfileConfig>();
-    public ProcessAffinityConfig[] ProcessAffinities { get; set; } = Array.Empty<ProcessAffinityConfig>();
-    public FolderAffinityConfig[] FolderAffinities { get; set; } = Array.Empty<FolderAffinityConfig>();
+    public ulong ServiceAffinityMask { get; init; }
+    public AffinityProfileConfig[] AffinityProfiles { get; set; } = [];
+    public TargetProcessRuleConfig[] TargetProcessRules { get; set; } = [];
+    public TargetFolderRuleConfig[] TargetFolderRules { get; set; } = [];
 
     public override string ToString()
     {
@@ -28,7 +29,7 @@ public class AffinityProfileConfig
     public string AffinityMask { get; set; } = string.Empty;
 }
 
-public class ProcessAffinityConfig
+public class TargetProcessRuleConfig
 {
     public string ProcessName { get; set; } = string.Empty;
 
@@ -37,7 +38,7 @@ public class ProcessAffinityConfig
     public int DelayDuration { get; set; }
 }
 
-public class FolderAffinityConfig
+public class TargetFolderRuleConfig
 {
     public string FolderPath { get; set; } = string.Empty;
 

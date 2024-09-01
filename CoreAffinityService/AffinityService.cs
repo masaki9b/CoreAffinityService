@@ -1,32 +1,28 @@
+using System.Diagnostics;
+using Microsoft.Extensions.Options;
+
 namespace CoreAffinityService;
 
-public class AffinityService : BackgroundService
+public class AffinityService(ILogger<AffinityService> logger, IOptions<AffinityConfiguration> config, AffinityManager affinityManager)
+    : BackgroundService
 {
-    private readonly ILogger<AffinityService> logger;
-
-    private readonly AffinityManager affinityManager;
-
-    public AffinityService(ILogger<AffinityService> logger, AffinityManager affinityManager)
-    {
-        this.logger = logger;
-        this.affinityManager = affinityManager;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var serviceProcess = Process.GetCurrentProcess();
+        serviceProcess.ProcessorAffinity = (IntPtr)config.Value.ServiceAffinityMask;
         try
         {
-            affinityManager.StartWatching();
+            affinityManager.StartWatching(stoppingToken);
         }
         catch (Exception e)
         {
-            logger.LogError(e, e.Message);
+            logger.LogError(e, "Failed process observing.");
         }
         
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         stoppingToken.Register(s => (s as TaskCompletionSource<bool>)?.SetResult(true), tcs);
         await tcs.Task;
 
-        logger.LogInformation($"{nameof(AffinityService)} Finished!");
+        logger.LogInformation($"{nameof(AffinityService)} is Finished");
     }
 }

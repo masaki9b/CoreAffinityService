@@ -2,6 +2,12 @@
 
 Core Affinity Service is auto process affinity configuration software for X3D processors in 2CCD configuration
 
+## Create Service
+
+1. Download from Releases.
+1. Run cmd.exe as admin.
+1. ```sc create "Core Affinity Service" start=auto binPath="C:\Path\To\CoreAffinityService.exe"```
+
 ## Affinity Configuration
 
 Configure the target to set affinity in `appsettings.json`.
